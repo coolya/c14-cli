@@ -5,3 +5,5 @@ go:
   - 1.7.x
 
 go_import_path: github.com/online-net/c14-cli
+
+script: make crosscommpile

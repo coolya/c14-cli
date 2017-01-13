@@ -29,8 +29,23 @@ INSTALL_LIST =		$(foreach int, $(COMMANDS), $(int)_install)
 TEST_LIST =		$(foreach int, $(COMMANDS) $(PACKAGES), $(int)_test)
 COVERPROFILE_LIST =	$(foreach int, $(subst $(GODIR),./,$(PACKAGES)), $(int)/profile.out)
 
+PLATFORMS = darwin freebsd linux windows
+default_archs = 386 amd64 arm
+darwin_archs = 386 amd64
+freebsd_archs = $(default_archs)
+linux_archs = $(default_archs)
+windows_archs = 386 amd64
 
 .PHONY: $(CLEAN_LIST) $(TEST_LIST) $(FMT_LIST) $(INSTALL_LIST) $(IREF_LIST)
+
+
+define make-arch-target
+  crosscommpile_$1_$2: $(SOURCES)
+	GOOS=$1 GOARCH=$2 $(GOBUILD) -ldflags $(LDFLAGS) -o $(NAME).$1.$2 ./cmd/c14
+  crosscommpile:: crosscommpile_$1_$2
+endef
+
+$(foreach platform,$(PLATFORMS),$(foreach arch,$($(platform)_archs),$(eval $(call make-arch-target,$(platform),$(arch)))))
 
 all: build
 build: $(NAME)
@@ -45,7 +60,12 @@ fmt: $(FMT_LIST)
 $(NAME): $(SOURCES)
 	$(GOFMT) $(SOURCES)
 	$(GO) tool vet --all=true $(SOURCES)
-	$(GOBUILD) -ldflags $(LDFLAGS) -o $(NAME) ./cmd/c14
+	export GOOS=linux
+	export GOARCH=amd64
+	$(GOBUILD) -ldflags $(LDFLAGS) ./cmd/c14
+	export GOOS=darwin
+	export GOARCH=amd64
+	$(GOBUILD) -ldflags $(LDFLAGS) ./cmd/c14
 
 $(CLEAN_LIST): %_clean:
 	$(GOCLEAN) $(subst $(GODIR),./,$*)
