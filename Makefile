@@ -42,10 +42,30 @@ fmt: $(FMT_LIST)
 .git:
 	touch $@
 
+PLATFORMS = darwin freebsd linux windows
+default_archs = 386 amd64 arm
+darwin_archs = $(default_archs)
+freebsd_archs = $(default_archs)
+linux_archs = $(default_archs)
+windows_archs = 386 amd64
+
+define make-arch-target
+  crosscommpile_$1_$2: $(SOURCES)
+	GOOS=$1 GOARCH=$2 $(GOBUILD) -ldflags $(LDFLAGS) -o $(NAME).$1.$2 ./cmd/c14
+  crosscommpile:: crosscommpile_$1_$2
+endef
+
+$(foreach platform,$(PLATFORMS),$(foreach arch,$($(platform)_archs),$(eval $(call make-arch-target,$(platform),$(arch)))))
+
 $(NAME): $(SOURCES)
 	$(GOFMT) $(SOURCES)
 	$(GO) tool vet --all=true $(SOURCES)
-	$(GOBUILD) -ldflags $(LDFLAGS) -o $(NAME) ./cmd/c14
+	export GOOS=linux
+	export GOARCH=amd64
+	$(GOBUILD) -ldflags $(LDFLAGS) ./cmd/c14
+	export GOOS=darwin
+	export GOARCH=amd64
+	$(GOBUILD) -ldflags $(LDFLAGS) ./cmd/c14
 
 $(CLEAN_LIST): %_clean:
 	$(GOCLEAN) $(subst $(GODIR),./,$*)
