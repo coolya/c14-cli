@@ -44,7 +44,7 @@ fmt: $(FMT_LIST)
 
 PLATFORMS = darwin freebsd linux windows
 default_archs = 386 amd64 arm
-darwin_archs = $(default_archs)
+darwin_archs = 386 amd64
 freebsd_archs = $(default_archs)
 linux_archs = $(default_archs)
 windows_archs = 386 amd64
